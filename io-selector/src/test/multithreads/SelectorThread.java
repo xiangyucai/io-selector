@@ -34,7 +34,7 @@ public class SelectorThread extends Thread {
 				System.out.println(Thread.currentThread().getName() + " select");
 				int num = selector.select();
 				System.out.println(Thread.currentThread().getName() + " select " + num);
-				while (num > 0) {
+				if (num > 0) {
 					Set<SelectionKey> selectedKeys = selector.selectedKeys();
 					Iterator<SelectionKey> it = selectedKeys.iterator();
 					while (it.hasNext()) {
