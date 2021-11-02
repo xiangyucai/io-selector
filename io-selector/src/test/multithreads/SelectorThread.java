@@ -3,7 +3,6 @@ package test.multithreads;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -59,7 +58,9 @@ public class SelectorThread extends Thread {
 						server.register(this.selector, SelectionKey.OP_ACCEPT);
 					} else {
 						SocketChannel client = (SocketChannel) c;
-						client.register(this.selector, SelectionKey.OP_READ);
+						client.configureBlocking(false);
+						ByteBuffer buffer = ByteBuffer.allocate(4096);
+						client.register(this.selector, SelectionKey.OP_READ, buffer);
 					}
 				}
 
@@ -73,15 +74,15 @@ public class SelectorThread extends Thread {
 		}
 	}
 
-	private void acceptHandler(SelectionKey key) throws ClosedChannelException {
-		ByteBuffer buffer = ByteBuffer.allocate(4096);
-		key.attach(buffer);
+	private void acceptHandler(SelectionKey key) throws IOException {
+		ServerSocketChannel channel = (ServerSocketChannel) key.channel();
+		SocketChannel client = channel.accept();
 		// 此处不能直接调用register，因为thread的selector还在阻塞状态，需要先wakeup
 		// 但是先wakeup，再调register的话，可能会因为线程不同步导致那边的thread的selector又变成阻塞状态后，
 		// register才被调用，最终结果还是阻塞
 		SelectorThread thread = group.nextWorkerSelectorThread();
 		try {
-			thread.q.put(key.channel());
+			thread.q.put(client);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
