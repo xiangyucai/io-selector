@@ -108,6 +108,7 @@ public class SelectorThread extends Thread {
 				} else {
 					System.out.println("client had closed");
 					channel.close();
+					break;
 				}
 			}
 		} catch (IOException e) {
