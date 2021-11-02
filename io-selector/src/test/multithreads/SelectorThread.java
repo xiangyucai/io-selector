@@ -74,7 +74,6 @@ public class SelectorThread extends Thread {
 	}
 
 	private void acceptHandler(SelectionKey key) throws ClosedChannelException {
-		ServerSocketChannel channel = (ServerSocketChannel) key.channel();
 		ByteBuffer buffer = ByteBuffer.allocate(4096);
 		key.attach(buffer);
 		// 此处不能直接调用register，因为thread的selector还在阻塞状态，需要先wakeup
@@ -82,7 +81,7 @@ public class SelectorThread extends Thread {
 		// register才被调用，最终结果还是阻塞
 		SelectorThread thread = group.nextWorkerSelectorThread();
 		try {
-			thread.q.put(channel);
+			thread.q.put(key.channel());
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
